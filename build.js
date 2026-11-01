@@ -15,7 +15,7 @@ const path = require("path");
 const vm = require("vm");
 
 const OUT = "_site";
-const COPY = ["css", "js", "data", "images", "favicon.svg"];   // copied as they are
+const COPY = ["css", "js", "data", "images", "fonts", "favicon.svg"];   // copied as they are
 
 // ---- Load the data and the page templates, exactly as the browser does ----
 const context = vm.createContext({ console, URLSearchParams });
@@ -34,10 +34,11 @@ if (/example\.com/.test(site.SITE.url)) {
 
 // ---- Fill the template (index.html) for one page ----
 const template = fs.readFileSync("index.html", "utf8");
-const fill = (meta, content) => template
+const fill = (meta, content, urlPath = "") => template
   .replace(/<!--META-->[\s\S]*?<!--\/META-->/, site.headTags(meta))
   .replace("<!--LOGO-->", site.esc(site.SITE.name))
   .replace("<!--NAV-->", site.navHTML())
+  .replace('<main id="app">', urlPath ? `<main id="app" data-prebuilt="${urlPath}">` : '<main id="app">')
   .replace("<!--APP-->", content)
   .replace("<!--FOOTER-->", site.footerHTML())
   .replace('href="https://wa.me/"', `href="https://wa.me/${site.SITE.whatsapp}"${site.on("whatsappButton") ? "" : " hidden"}`);
@@ -71,7 +72,7 @@ function buildPage(urlPath) {
   const route = site.resolveRoute(urlPath, "");
   // A level with only one choice (e.g. a state with one city) forwards to that choice
   if (route.page === "redirect") return writeRedirect(path.join(urlPath, "index.html"), route.to);
-  write(path.join(urlPath, "index.html"), fill(site.pageMeta(route), site.renderPage(route)));
+  write(path.join(urlPath, "index.html"), fill(site.pageMeta(route), site.renderPage(route), urlPath));
   pages.push(urlPath);
 }
 

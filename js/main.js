@@ -30,7 +30,11 @@ function route() {
   clearInterval(clockTimer);
   setMenu(false);
   if (viewer.open) viewer.close();
-  app.innerHTML = renderPage(r);
+  // On the first visit the page already arrives fully built (build.js), so only
+  // draw it again if it wasn't, or if it shows this visitor's "Recently viewed".
+  const prebuilt = firstLoad && app.dataset.prebuilt === location.pathname;
+  const needsRedraw = !prebuilt || (r.page === "home" && on("recentlyViewed") && getRecent().length);
+  if (needsRedraw) app.innerHTML = renderPage(r);
 
   const meta = pageMeta(r);
   document.title = meta.title;
@@ -50,8 +54,10 @@ function route() {
     $$("#reviewList [hidden]").forEach(el => (el.hidden = false));
     e.currentTarget.remove();
   });
-  window.scrollTo({ top: 0, behavior: "instant" });
+  if (!firstLoad) window.scrollTo({ top: 0, behavior: "instant" });
+  firstLoad = false;
 }
+let firstLoad = true;
 
 document.addEventListener("click", e => {
   // Links that scroll within the page, e.g. "Check availability"
