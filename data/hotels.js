@@ -40,7 +40,7 @@ const SITE = {
   // ▼ PLACEHOLDERS: replace everything marked ← with your real brand details
   url: "https://www.hotelswale.com",      // ← your domain, used for Google (no slash at the end)
   name: "Hotels Wale",                  // ← shown as the logo
-  brand: "Hotels Wale Hotels & Resorts",// ← full name used in Google titles
+  brand: "HOTELSWALE.COM",// ← full name used in Google titles
   tagline: "Hotels & Resorts",
   headline: "Stays across the Himalayas,",
   headlineEm: "made for every journey.",
