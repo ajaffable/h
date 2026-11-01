@@ -210,6 +210,9 @@ const ICON = {
   right: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`,
   phone: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3h2.6l1.4 4.3-2 1.5a12 12 0 0 0 6.6 6.6l1.5-2 4.3 1.4v2.6A2.6 2.6 0 0 1 18.4 20 15.4 15.4 0 0 1 4 5.6 2.6 2.6 0 0 1 6.6 3z"/></svg>`,
   photos: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
+  mountain: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20l6.5-11 4 6.5L16 12l5 8z"/><circle cx="17" cy="6" r="2"/></svg>`,
+  chat: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
   map: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>`
 };
 const icon = name => `<span class="icon">${ICON[name]}</span>`;
@@ -310,12 +313,32 @@ function navHTML() {
   <a href="${whatsappLink()}" class="btn btn--small" target="_blank" rel="noopener">${on("bookingForm") ? "Book on WhatsApp" : "WhatsApp us"}</a>`;
 }
 
+// Social media logos for the footer (shown only when SITE.instagram / SITE.facebook are set)
+const SOCIAL = {
+  instagram: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg>`,
+  facebook: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v2H7v4h3v6h4v-6h3l1-4h-4V8z"/></svg>`
+};
+
 function footerHTML() {
+  const social = [["instagram", SITE.instagram], ["facebook", SITE.facebook]].filter(([, url]) => url && url !== "#");
   return `
+  <div class="cta-band">
+    ${pic(SITE.ctaImage || SITE.heroImage, "", { sizes: "100vw", widths: [960, 1440] })}
+    <div class="wrap cta">
+      <p class="label label--light">Plan your trip</p>
+      <h2>Need help choosing <em>a stay?</em></h2>
+      <p>Tell us your dates and where you'd like to go. We'll suggest the right hotel and share the best direct rate.</p>
+      <div class="cta__actions">
+        <a class="btn btn--light" href="${whatsappLink()}" target="_blank" rel="noopener">WhatsApp us</a>
+        <a class="btn btn--outline-light" href="tel:${esc(SITE.phone.replace(/\s/g, ""))}">${icon("phone")} ${esc(SITE.phone)}</a>
+      </div>
+    </div>
+  </div>
   <div class="wrap footer__grid">
     <div>
       <a href="/" class="logo">${esc(SITE.name)}</a>
       <p>${esc(SITE.intro)}</p>
+      ${social.length ? `<p class="social">${social.map(([name, url]) => `<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${name}">${SOCIAL[name]}</a>`).join("")}</p>` : ""}
     </div>
     <div>
       <p class="label">Explore</p>
@@ -335,8 +358,7 @@ function footerHTML() {
       <p class="label">Contact</p>
       <p>${SITE.address ? `${esc(SITE.address)}<br>` : ""}
          ${[SITE.phone, SITE.phone2].filter(Boolean).map(p => `<a href="tel:${esc(p.replace(/\s/g, ""))}">${esc(p)}</a>`).join("<br>")}<br>
-         <a href="mailto:${esc(SITE.email)}">${esc(SITE.email)}</a><br>
-         <a href="${esc(SITE.instagram)}">Instagram</a> · <a href="${esc(SITE.facebook)}">Facebook</a></p>
+         <a href="mailto:${esc(SITE.email)}">${esc(SITE.email)}</a></p>
     </div>
   </div>
   <div class="wrap footer__bottom">
@@ -384,7 +406,7 @@ function homePage() {
     ${shelf("Welcome back", "Recently <em>viewed</em>", recent)}
 
     ${on("homeDestinations") && destinations.length > 1 ? `
-    <section class="section section--compact">
+    <section class="section section--compact section--sand">
       <div class="wrap">
         <div class="section__row">
           <div><p class="label">Destinations</p><h2>Where <em>to next?</em></h2></div>
@@ -410,6 +432,17 @@ function homePage() {
           ${[...allHotels].sort(SORTERS.popular).map((n, i) => hotelCard(n).replace('<a class="card"', `<a class="card${i >= STAYS_SHOWN ? " is-extra" : ""}"`)).join("")}
         </div>
         ${allHotels.length > STAYS_SHOWN ? `<div class="center"><button type="button" class="btn btn--ghost" id="showAllStays">Show all ${allHotels.length} stays</button></div>` : ""}
+      </div>
+    </section>` : ""}
+
+    ${on("whyBookWithUs") && SITE.perks?.length ? `
+    <section class="section perks-band">
+      ${pic(SITE.perksImage || slides[1] || SITE.heroImage, "", { sizes: "100vw", widths: [960, 1440] })}
+      <div class="wrap">
+        <div class="section__row"><div><p class="label label--light">Why stay with us</p><h2>Comfort, views <em>&amp; real hospitality</em></h2></div></div>
+        <ul class="perks-grid">
+          ${SITE.perks.map(p => `<li>${p.icon && ICON[p.icon] ? `<span class="perk__icon">${ICON[p.icon]}</span>` : ""}<h3>${esc(p.title)}</h3><p>${esc(p.text)}</p></li>`).join("")}
+        </ul>
       </div>
     </section>` : ""}
 
@@ -440,15 +473,6 @@ function homePage() {
 
     ${shelf("Just opened", "Newly <em>added</em>", latest)}
 
-    ${on("whyBookWithUs") && SITE.perks?.length ? `
-    <section class="section section--dark section--compact">
-      <div class="wrap">
-        <div class="section__row"><div><p class="label">Why book with us</p><h2>Book direct, <em>stay better</em></h2></div></div>
-        <ul class="perks-grid">
-          ${SITE.perks.map(p => `<li><h3>${esc(p.title)}</h3><p>${esc(p.text)}</p></li>`).join("")}
-        </ul>
-      </div>
-    </section>` : ""}
 
     ${reviews.length ? `
     <section class="section section--compact" id="reviews">
@@ -493,58 +517,113 @@ function destinationCard(d) {
     `${esc(d.state)} · ${d.hotels.length === 1 ? "1 stay" : `${d.hotels.length} stays`}`);
 }
 
-// All destinations, ordered by state
-function destinationsPage() {
-  const states = new Set(destinations.map(d => d.state));
-  const byState = [...destinations].sort((a, b) => a.state.localeCompare(b.state) || a.name.localeCompare(b.name));
+// Photo banner at the top of inner pages (destinations, categories, cities, search, offers)
+function pageBanner({ image, crumbsHTML = "", label = "", title, sub = "", stats = [], extra = "" }) {
   return `
-    ${simpleCrumbs([], "Destinations")}
-    <section class="section section--top">
+    <section class="page-banner">
+      ${image ? pic(image, "", { sizes: "100vw", widths: [960, 1440], eager: true }) : ""}
+      <div class="wrap page-banner__inner">
+        ${crumbsHTML.replace('class="crumbs wrap"', 'class="crumbs"')}
+        ${label ? `<p class="label label--light">${label}</p>` : ""}
+        <h1>${title}</h1>
+        ${sub ? `<p class="lead">${sub}</p>` : ""}
+        ${extra}
+        ${stats.length ? `<ul class="stats">${stats.map(([v, l]) => `<li><strong>${esc(v)}</strong>${esc(l)}</li>`).join("")}</ul>` : ""}
+      </div>
+    </section>`;
+}
+
+// Counts like "12 hotels · 8 cities" for a group of hotels
+function countStats(hotels) {
+  const cities = new Set(hotels.map(n => n.data.city)).size;
+  const states = new Set(hotels.map(n => n.data.state)).size;
+  const types = root.children.map(c => [hotels.filter(n => n.category === c).length, c.name.toLowerCase()]).filter(([n]) => n);
+  return [
+    [hotels.length, hotels.length === 1 ? "stay" : "stays"],
+    ...(types.length > 1 ? types : []),
+    ...(cities > 1 ? [[cities, "cities"]] : []),
+    ...(states > 1 ? [[states, "states"]] : [])
+  ];
+}
+
+// A tinted section with a sideways row of destination cards
+function destinationsRow(list, label, title) {
+  if (!list.length || !on("destinations")) return "";
+  return `
+    <section class="section section--compact section--tint">
       <div class="wrap">
-        <div class="section__head">
-          <p class="label">Destinations</p>
-          <h1 class="h2">Where <em>we are</em></h1>
-          <p class="muted">${plural(allHotels.length, "hotel")} in ${plural(destinations.length, "destination")} across ${plural(states.size, "state")}.</p>
+        <div class="section__row">
+          <div><p class="label">${label}</p><h2>${title}</h2></div>
+          <a class="link" href="/destinations/">All destinations ${icon("arrow")}</a>
+          ${list.length > 4 ? scrollButtons() : ""}
         </div>
-        <div class="pcards pcards--grid">${byState.map(destinationCard).join("")}</div>
+        <div class="cards--row pcards">${list.map(destinationCard).join("")}</div>
+      </div>
+    </section>`;
+}
+
+// Other destinations, closest first (same state, then the rest)
+const otherDestinations = (state, except = []) =>
+  [...destinations.filter(d => d.state === state), ...destinations.filter(d => d.state !== state)].filter(d => !except.includes(d.name));
+
+// All destinations, grouped by state
+function destinationsPage() {
+  const states = [...new Set(destinations.map(d => d.state))].sort();
+  return `
+    ${pageBanner({
+      image: SITE.heroImage,
+      crumbsHTML: simpleCrumbs([], "Destinations"),
+      label: "Destinations",
+      title: "Where <em>we are</em>",
+      sub: `From riverside Rishikesh to the hills of Manali, find a stay in ${plural(destinations.length, "destination")}.`,
+      stats: countStats(allHotels)
+    })}
+    <section class="section section--compact">
+      <div class="wrap">
+        ${states.map(s => `
+          <div class="group">
+            <div class="section__row"><div><p class="label">${plural(destinations.filter(d => d.state === s).length, "destination")}</p><h2>${esc(s)}</h2></div></div>
+            <div class="pcards pcards--grid${destinations.filter(d => d.state === s).length <= 3 ? " pcards--few" : ""}">${destinations.filter(d => d.state === s).map(destinationCard).join("")}</div>
+          </div>`).join("")}
       </div>
     </section>`;
 }
 
 // One city: all its hotels, whatever their type
 function destinationPage(d) {
-  const others = destinations.filter(x => x !== d && x.state === d.state);
   return `
-    ${simpleCrumbs([["Destinations", "/destinations/"]], d.name)}
-    <section class="section section--top">
+    ${pageBanner({
+      image: d.hotels[0].data.image,
+      crumbsHTML: simpleCrumbs([["Destinations", "/destinations/"]], d.name),
+      label: esc(d.state),
+      title: `Stays in <em>${esc(d.name)}</em>`,
+      sub: `Handpicked ${d.hotels.length === 1 ? "stay" : "hotels and resorts"} in ${esc(d.name)}, ${esc(d.state)}.`,
+      stats: countStats(d.hotels)
+    })}
+    <section class="section section--compact">
       <div class="wrap">
-        <div class="section__head">
-          <p class="label">${esc(d.state)}</p>
-          <h1 class="h2">Hotels in <em>${esc(d.name)}</em></h1>
-          <p class="muted">${plural(d.hotels.length, "hotel")} in ${esc(d.name)}, ${esc(d.state)}.</p>
-        </div>
+        <div class="section__row"><div><p class="label">${plural(d.hotels.length, "stay")}</p><h2>Where to stay in <em>${esc(d.name)}</em></h2></div></div>
         <div class="cards">${[...d.hotels].sort(SORTERS.popular).map(hotelCard).join("")}</div>
-        ${others.length ? `
-        <p class="quick quick--spaced"><span>Also in ${esc(d.state)}:</span>${others.map(x => `<a href="${destHref(x)}">${esc(x.name)}</a>`).join("")}</p>` : ""}
       </div>
-    </section>`;
+    </section>
+    ${destinationsRow(otherDestinations(d.state, [d.name]), "Keep exploring", "More places <em>to visit</em>")}`;
 }
 
 // Every hotel that has an offer
 function offersPage() {
   const hotels = hotelsWithOffers();
   return `
-    ${simpleCrumbs([], "Offers")}
-    <section class="section section--top">
-      <div class="wrap">
-        <div class="section__head">
-          <p class="label">Offers</p>
-          <h1 class="h2">Current <em>offers</em></h1>
-          <p class="muted">Book direct to get these offers. Ask us on WhatsApp for details.</p>
-        </div>
-        <div class="cards">${hotels.map(hotelCard).join("")}</div>
-      </div>
-    </section>`;
+    ${pageBanner({
+      image: hotels[0]?.data.image || SITE.heroImage,
+      crumbsHTML: simpleCrumbs([], "Offers"),
+      label: "Offers",
+      title: "Current <em>offers</em>",
+      sub: "Book direct to get these offers. Ask us on WhatsApp for details."
+    })}
+    <section class="section section--compact">
+      <div class="wrap"><div class="cards">${hotels.map(hotelCard).join("")}</div></div>
+    </section>
+    ${destinationsRow(destinations, "Destinations", "Where <em>to next?</em>")}`;
 }
 
 // Search & browse all hotels. The results are filled in here too, so the
@@ -554,11 +633,16 @@ function hotelsPage(params) {
   const type = params.get("type") || "";
   const results = findHotels(q, type).sort(SORTERS[params.get("sort")] || SORTERS.popular);
   return `
-    ${simpleCrumbs([], "Find a hotel")}
-    <section class="section section--top">
+    ${pageBanner({
+      image: SITE.heroImage,
+      crumbsHTML: simpleCrumbs([], "Find a hotel"),
+      label: "All stays",
+      title: "Find <em>a hotel</em>",
+      sub: "Search by city, state or hotel name.",
+      extra: searchBox(q, false)
+    })}
+    <section class="section section--compact">
       <div class="wrap">
-        <h1 class="h2">Find <em>a hotel</em></h1>
-        ${searchBox(q, !q)}
         <div class="filters">
           <div class="chips" role="group" aria-label="Hotel type">
             <button class="chip" data-type="">All</button>
@@ -579,27 +663,37 @@ function hotelsPage(params) {
     </section>`;
 }
 
-// Category, state or city: a grid of whatever is one level down
+// Category, state or city: what's one level down, plus all their hotels
 function listPage(node) {
-  const hotels = hotelsIn(node);
-  const title = node.type === "category" ? esc(node.name) : `Hotels in <em>${esc(node.name)}</em>`;
-  const intro = node.type === "category" ? esc(node.data.description || "")
-    : node.type === "state" ? `${plural(hotels.length, "hotel")} across ${plural(node.children.length, "city", "cities")} in ${esc(node.name)}.`
-    : `${plural(hotels.length, "hotel")} in ${esc(node.name)}.`;
-  const cards = node.type === "city" ? node.children.map(hotelCard) : node.children.map(placeCard);
+  const hotels = [...hotelsIn(node)].sort(SORTERS.popular);
+  const where = node.type === "category" ? "" : ` in <em>${esc(node.name)}</em>`;
+  const sub = node.type === "category" ? esc(node.data.description || node.data.tagline || "")
+    : `${categoryOf(node).name} across ${esc(node.name)}${node.type === "state" ? `: ${node.children.map(c => esc(c.name)).join(", ")}` : ""}.`;
+  const childLabel = node.type === "category" ? "By state" : "By city";
 
   return `
-    ${crumbs(node)}
-    <section class="section section--top">
+    ${pageBanner({
+      image: node.type === "category" ? node.data.image : hotels[0].data.image,
+      crumbsHTML: crumbs(node),
+      label: esc(categoryOf(node).name),
+      title: node.type === "category" ? esc(node.name) : `${esc(categoryOf(node).name)}${where}`,
+      sub,
+      stats: countStats(hotels)
+    })}
+    ${node.type !== "city" && node.children.length > 1 ? `
+    <section class="section section--compact">
       <div class="wrap">
-        <div class="section__head">
-          <p class="label">${esc(categoryOf(node).name)}</p>
-          <h1 class="h2">${title}</h1>
-          <p class="muted">${intro}</p>
-        </div>
-        <div class="${node.type === "city" ? "cards" : "pcards pcards--grid"}">${cards.join("")}</div>
+        <div class="section__row"><div><p class="label">${childLabel}</p><h2>Choose <em>${node.type === "category" ? "a state" : "a city"}</em></h2></div></div>
+        <div class="pcards pcards--grid${node.children.length <= 3 ? " pcards--few" : ""}">${node.children.map(placeCard).join("")}</div>
       </div>
-    </section>`;
+    </section>` : ""}
+    <section class="section section--compact${node.type !== "city" && node.children.length > 1 ? " section--tint" : ""}">
+      <div class="wrap">
+        <div class="section__row"><div><p class="label">${plural(hotels.length, "stay")}</p><h2>All ${esc(categoryOf(node).name.toLowerCase())}${where}</h2></div></div>
+        <div class="cards">${hotels.map(hotelCard).join("")}</div>
+      </div>
+    </section>
+    ${node.type === "city" ? destinationsRow(otherDestinations(hotels[0].data.state, [hotels[0].data.city]), "Keep exploring", "More places <em>to visit</em>") : ""}`;
 }
 
 function hotelPage(node) {

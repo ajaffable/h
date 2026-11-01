@@ -59,9 +59,13 @@ const SITE = {
     // { value: "10+", label: "years of hospitality" },   ← add your own figures
   ],
 
-  // "Why book with us" points (switch on with FEATURES.whyBookWithUs), e.g.
-  // { title: "Best rate, guaranteed", text: "Book direct for our lowest price." },
-  perks: []
+  // "Why stay with us" points (shown with FEATURES.whyBookWithUs). icon: pin, mountain, chat or clock
+  perks: [
+    { icon: "pin", title: "Prime locations", text: "Close to temples, lakes, Mall Roads and the best viewpoints in every town." },
+    { icon: "mountain", title: "Rooms with a view", text: "Wake up to the Himalayas, the Ganges or quiet forest, depending on where you stay." },
+    { icon: "chat", title: "Book on WhatsApp", text: "Message us your dates and get a reply from a real person, no forms or apps." },
+    { icon: "clock", title: "24/7 support", text: "Our team is a call away before, during and after your stay." }
+  ]
 };
 
 /* Show or hide parts of the website: true = show, false = hide. */
@@ -80,7 +84,7 @@ const FEATURES = {
   popularHotels: true,       // "Popular hotels" row (hotels with popular: true)
   browseByType: true,        // the category cards
   newlyAdded: true,          // "Newly added" row (uses addedOn)
-  whyBookWithUs: false,      // the SITE.perks section (add perks first)
+  whyBookWithUs: true,       // the "Why stay with us" band (points in SITE.perks)
   siteReviews: true,         // reviews and average rating (shown once REVIEWS has some)
   faq: false,                // questions and answers (add FAQS first)
 
