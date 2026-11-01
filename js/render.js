@@ -201,21 +201,48 @@ function badgeFor(h) {
   return "";
 }
 
+// Small line icons (inline SVG, no icon library needed)
+const ICON = {
+  pin: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
+  arrow: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`,
+  left: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>`,
+  right: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`,
+  phone: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3h2.6l1.4 4.3-2 1.5a12 12 0 0 0 6.6 6.6l1.5-2 4.3 1.4v2.6A2.6 2.6 0 0 1 18.4 20 15.4 15.4 0 0 1 4 5.6 2.6 2.6 0 0 1 6.6 3z"/></svg>`,
+  photos: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
+  map: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>`
+};
+const icon = name => `<span class="icon">${ICON[name]}</span>`;
+
 function hotelCard(node) {
   const h = node.data;
   const price = shownPrice(h);
   const rating = shownRating(h);
   return `
-    <a class="card" href="${href(node)}">
-      <div class="arch card__img">${pic(h.image, h.name, CARD_IMG)}${badgeFor(h)}</div>
-      <p class="card__meta">${typeTag(node.category)}${esc(h.city)}</p>
-      <h3>${esc(h.name)}</h3>
-      ${h.tagline ? `<p class="card__text">${esc(h.tagline)}</p>` : ""}
-      ${price || rating ? `
-      <div class="card__foot card__foot--row">
-        <span>${price ? `from <strong>${inr(price)}</strong>` : ""}</span>
-        ${rating ? `<span class="rating" aria-label="Rated ${rating} out of 5">★ ${rating}</span>` : ""}
-      </div>` : ""}
+    <a class="card" href="${href(node)}" data-cat="${esc(node.category.slug)}" data-state="${esc(slug(h.state))}">
+      <div class="card__img">${pic(h.image, h.name, CARD_IMG)}${badgeFor(h)}<span class="card__type">${typeTag(node.category)}</span></div>
+      <div class="card__body">
+        <p class="card__meta">${icon("pin")}<span>${esc(h.city)}, ${esc(h.state)}</span></p>
+        <h3>${esc(h.name)}</h3>
+        ${h.tagline ? `<p class="card__text">${esc(h.tagline)}</p>` : ""}
+        <div class="card__foot">
+          <span>${price ? `from <strong>${inr(price)}</strong>` : rating ? `<span class="rating">★ ${rating}</span>` : "View hotel"}</span>
+          <span class="card__go">${icon("arrow")}</span>
+        </div>
+      </div>
+    </a>`;
+}
+
+// A photo card with the name over the picture (states, cities, destinations)
+function photoCard(link, image, title, sub, extra = "") {
+  return `
+    <a class="pcard" href="${link}">
+      ${pic(image, title, { sizes: "(max-width: 860px) 70vw, 300px", widths: [320, 480, 720], ar: "4:5" })}
+      <div class="pcard__body">
+        <h3>${esc(title)}</h3>
+        <p>${sub}</p>
+        ${extra}
+      </div>
     </a>`;
 }
 
@@ -226,13 +253,7 @@ function placeCard(node) {
   const sub = node.type === "state" && node.children.length > 1
     ? `${plural(hotels.length, "hotel")} · ${node.children.map(c => esc(c.name)).join(", ")}`
     : target.type === "hotel" ? esc(target.name) : plural(hotels.length, "hotel");
-  return `
-    <a class="card" href="${href(node)}">
-      <div class="arch card__img">${pic(hotels[0].data.image, node.name, CARD_IMG)}</div>
-      <h3>${esc(node.name)}</h3>
-      <p class="card__text">${sub}</p>
-      <div class="card__foot"><span></span><span class="card__go">Explore →</span></div>
-    </a>`;
+  return photoCard(href(node), hotels[0].data.image, node.name, sub);
 }
 
 function reviewCard(r, hidden = false) {
@@ -254,12 +275,19 @@ function shelf(label, title, nodes, more = "") {
       <div class="wrap">
         <div class="section__row">
           <div><p class="label">${label}</p><h2>${title}</h2></div>
-          ${more}
+          ${more}${nodes.length > 4 ? scrollButtons() : ""}
         </div>
         <div class="cards cards--row">${nodes.map(hotelCard).join("")}</div>
       </div>
     </section>`;
 }
+
+// ‹ › buttons that scroll the row of cards next to them
+const scrollButtons = () => `
+  <div class="scroll-btns">
+    <button type="button" data-scroll-row="-1" aria-label="Scroll left">${ICON.left}</button>
+    <button type="button" data-scroll-row="1" aria-label="Scroll right">${ICON.right}</button>
+  </div>`;
 
 function searchBox(value = "", autofocus = false) {
   return `
@@ -327,23 +355,30 @@ function homePage() {
   const reviews = on("siteReviews") ? allReviews : [];
   const avg = reviews.length ? (reviews.reduce((s, r) => s + (r.rating || 5), 0) / reviews.length).toFixed(1) : null;
 
+  // Photos for the hero slideshow: SITE.heroImages, or the main photo plus a few hotels
+  const slides = [...new Set(SITE.heroImages || [SITE.heroImage, ...[...allHotels].sort(SORTERS.popular)
+    .filter(n => n.category === root.children[0]).map(n => n.data.image)])].filter(Boolean).slice(0, 4);
+  const states = [...new Set(allHotels.map(n => n.data.state))].sort();
+  const STAYS_SHOWN = 8;
+
   return `
-    <section class="hero">
-      <div class="wrap hero__grid">
-        <div>
-          <p class="label">${esc(SITE.tagline)}</p>
-          <h1>${esc(SITE.headline || "Stays across India,")} <em>${esc(SITE.headlineEm || "chosen with care.")}</em></h1>
-          <p class="lead">${esc(SITE.intro)}</p>
-          ${on("search") ? searchBox() : `<div class="hero__actions"><a class="btn" href="#" data-scroll="types">Explore our hotels</a></div>`}
-          ${on("popularCities") && (on("search") || on("destinations")) ? `
-          <p class="quick">
-            <span>Popular:</span>
-            ${topCities(5).map(c => `<a href="${cityHref(c)}">${esc(c)}</a>`).join("")}
-          </p>` : ""}
-          ${statsRow()}
-        </div>
-        <div class="arch hero__img">${pic(SITE.heroImage, "", { widths: [480, 720, 960], sizes: "(max-width: 860px) 90vw, 480px", ar: "1:1", eager: true })}</div>
+    <section class="hero hero--home">
+      <div class="hero__slides" aria-hidden="true">
+        ${slides.map((img, i) => `<div class="hero__slide${i ? "" : " is-active"}">${pic(img, "", { sizes: "100vw", widths: [960, 1440], eager: !i })}</div>`).join("")}
       </div>
+      <div class="wrap hero__content">
+        <p class="label label--light">${esc(SITE.tagline)}</p>
+        <h1>${esc(SITE.headline || "Stays across India,")} <em>${esc(SITE.headlineEm || "chosen with care.")}</em></h1>
+        <p class="lead">${esc(SITE.intro)}</p>
+        ${on("search") ? searchBox() : `<div class="hero__actions"><a class="btn" href="#" data-scroll="stays">Explore our hotels</a></div>`}
+        ${on("popularCities") && (on("search") || on("destinations")) ? `
+        <p class="quick">
+          <span>Popular:</span>
+          ${topCities(5).map(c => `<a href="${cityHref(c)}">${esc(c)}</a>`).join("")}
+        </p>` : ""}
+        ${statsRow()}
+      </div>
+      ${slides.length > 1 ? `<div class="hero__dots">${slides.map((_, i) => `<button type="button" data-slide="${i}" aria-label="Photo ${i + 1}"${i ? "" : ' aria-current="true"'}></button>`).join("")}</div>` : ""}
     </section>
 
     ${shelf("Welcome back", "Recently <em>viewed</em>", recent)}
@@ -353,14 +388,33 @@ function homePage() {
       <div class="wrap">
         <div class="section__row">
           <div><p class="label">Destinations</p><h2>Where <em>to next?</em></h2></div>
-          ${on("destinations") && destinations.length > 8 ? `<a class="link" href="/destinations/">All ${destinations.length} destinations →</a>` : ""}
+          ${on("destinations") ? `<a class="link" href="/destinations/">All ${destinations.length} destinations ${icon("arrow")}</a>` : ""}
+          ${destinations.length > 4 ? scrollButtons() : ""}
         </div>
-        <div class="cards cards--row">${destinations.slice(0, 8).map(destinationCard).join("")}</div>
+        <div class="cards--row pcards">${destinations.map(destinationCard).join("")}</div>
+      </div>
+    </section>` : ""}
+
+    ${on("homeStays") ? `
+    <section class="section section--compact section--tint" id="stays">
+      <div class="wrap">
+        <div class="section__row">
+          <div><p class="label">Our stays</p><h2>Find your <em>perfect stay</em></h2></div>
+        </div>
+        <div class="chips chips--filter" role="group" aria-label="Filter hotels">
+          <button type="button" class="chip" data-filter="" aria-pressed="true">All <span>${allHotels.length}</span></button>
+          ${root.children.map(c => `<button type="button" class="chip" data-filter="cat:${c.slug}" aria-pressed="false">${esc(c.name)} <span>${hotelsIn(c).length}</span></button>`).join("")}
+          ${states.length > 1 ? `<i class="chips__sep" aria-hidden="true"></i>` + states.map(s => `<button type="button" class="chip" data-filter="state:${slug(s)}" aria-pressed="false">${esc(s)} <span>${allHotels.filter(n => n.data.state === s).length}</span></button>`).join("") : ""}
+        </div>
+        <div class="cards stays" id="stayGrid" data-shown="${STAYS_SHOWN}">
+          ${[...allHotels].sort(SORTERS.popular).map((n, i) => hotelCard(n).replace('<a class="card"', `<a class="card${i >= STAYS_SHOWN ? " is-extra" : ""}"`)).join("")}
+        </div>
+        ${allHotels.length > STAYS_SHOWN ? `<div class="center"><button type="button" class="btn btn--ghost" id="showAllStays">Show all ${allHotels.length} stays</button></div>` : ""}
       </div>
     </section>` : ""}
 
     ${shelf("Guest favourites", "Popular <em>hotels</em>", popular,
-      on("search") ? `<a class="link" href="${searchHref()}">See all ${allHotels.length} hotels →</a>` : "")}
+      on("search") ? `<a class="link" href="${searchHref()}">See all ${allHotels.length} hotels ${icon("arrow")}</a>` : "")}
 
     ${on("browseByType") || !on("search") ? `
     <section class="section section--compact" id="types">
@@ -372,12 +426,11 @@ function homePage() {
             const cities = new Set(hotels.map(n => n.data.city)).size;
             return `
               <a class="type" href="${href(c)}">
-                <div class="arch type__img">${pic(c.data.image, c.name, { sizes: "(max-width: 860px) 35vw, 200px", widths: [240, 400], ar: "4:5" })}</div>
-                <div>
+                ${pic(c.data.image, c.name, { sizes: "(max-width: 860px) 92vw, 580px", widths: [480, 960], ar: "16:10" })}
+                <div class="type__body">
                   <h3>${esc(c.name)}</h3>
-                  <p class="card__text">${esc(c.data.tagline || "")}</p>
-                  <p class="card__meta">${plural(hotels.length, "hotel")} · ${plural(cities, "city", "cities")}</p>
-                  <span class="card__go">Explore →</span>
+                  <p>${esc(c.data.tagline || "")}</p>
+                  <span class="type__go">${plural(hotels.length, "hotel")} · ${plural(cities, "city", "cities")} ${icon("arrow")}</span>
                 </div>
               </a>`;
           }).join("")}
@@ -436,17 +489,8 @@ function statsRow() {
 
 // A card for one city (used on the home page and the Destinations page)
 function destinationCard(d) {
-  return `
-    <a class="card" href="${cityHref(d.name)}">
-      <div class="arch card__img">${pic(d.hotels[0].data.image, d.name, CARD_IMG)}</div>
-      <p class="card__meta">${esc(d.state)}</p>
-      <h3>${esc(d.name)}</h3>
-      <p class="card__text">${d.hotels.length === 1 ? esc(d.hotels[0].name) : plural(d.hotels.length, "hotel")}</p>
-      <div class="card__foot card__foot--row">
-        <span>${[...new Set(d.hotels.map(n => n.category))].map(c => typeTag(c)).join("")}</span>
-        <span class="card__go">See →</span>
-      </div>
-    </a>`;
+  return photoCard(cityHref(d.name), d.hotels[0].data.image, d.name,
+    `${esc(d.state)} · ${d.hotels.length === 1 ? "1 stay" : `${d.hotels.length} stays`}`);
 }
 
 // All destinations, ordered by state
@@ -462,7 +506,7 @@ function destinationsPage() {
           <h1 class="h2">Where <em>we are</em></h1>
           <p class="muted">${plural(allHotels.length, "hotel")} in ${plural(destinations.length, "destination")} across ${plural(states.size, "state")}.</p>
         </div>
-        <div class="cards">${byState.map(destinationCard).join("")}</div>
+        <div class="pcards pcards--grid">${byState.map(destinationCard).join("")}</div>
       </div>
     </section>`;
 }
@@ -553,7 +597,7 @@ function listPage(node) {
           <h1 class="h2">${title}</h1>
           <p class="muted">${intro}</p>
         </div>
-        <div class="cards">${cards.join("")}</div>
+        <div class="${node.type === "city" ? "cards" : "pcards pcards--grid"}">${cards.join("")}</div>
       </div>
     </section>`;
 }
@@ -589,97 +633,95 @@ function hotelPage(node) {
     ? `<a href="#" class="btn" data-scroll="reserve">Check availability</a>`
     : `<a href="${whatsappLink(h.whatsapp)}" class="btn" target="_blank" rel="noopener">Enquire on WhatsApp</a>`;
 
+  // All photos of the hotel: the main photo first, then the gallery
+  const photos = [...new Set([h.image, ...(on("gallery") ? h.gallery || [] : [])])];
+  const MOSAIC = 5;
+  const glanceList = Object.entries(glance).filter(([k]) => k !== "Phone" && k !== "Email");
+
   return `
     ${crumbs(node)}
 
-    <section class="hero hero--hotel">
-      <div class="wrap hero__grid">
-        <div>
-          <p class="label">${typeTag(node.category, true)}${on("destinations")
-            ? `<a href="/destinations/${slug(h.city)}/">${esc(h.city)}</a>` : esc(h.city)}, ${esc(h.state)}</p>
-          <h1>${esc(h.name)}</h1>
-          ${h.tagline ? `<p class="tagline">${esc(h.tagline)}</p>` : ""}
-          ${h.offer && on("offers") ? `<p class="offer">✦ ${esc(h.offer)}</p>` : ""}
-          ${h.description ? `<p class="lead">${esc(h.description)}</p>` : ""}
-          <div class="hero__actions">
-            ${enquire}
-            <a href="tel:${esc(phone.replace(/\s/g, ""))}" class="link">Call ${esc(phone)}</a>
-          </div>
-          <p class="hero__live label">
-            ${price ? `<span>From ${inr(price)} / night</span>` : ""}
-            ${rating ? `<span>★ ${rating} guest rating</span>` : ""}
-            ${live ? `<span><span id="localTime">--:--</span> local time<span id="weather"></span></span>` : ""}
-          </p>
-        </div>
-        <div class="arch hero__img">${pic(h.image, h.name, { widths: [480, 720, 960], sizes: "(max-width: 860px) 90vw, 480px", ar: "1:1", eager: true })}</div>
-      </div>
-      ${h.highlights?.length ? `<ul class="wrap highlights">${h.highlights.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    <section class="wrap hotel-head">
+      <p class="card__meta">${typeTag(node.category, true)}${icon("pin")}<span>${on("destinations")
+        ? `<a href="/destinations/${slug(h.city)}/">${esc(h.city)}</a>` : esc(h.city)}, ${esc(h.state)}</span></p>
+      <h1>${esc(h.name)}</h1>
+      ${h.tagline ? `<p class="tagline">${esc(h.tagline)}</p>` : ""}
     </section>
 
-    ${Object.keys(glance).length || about ? `
-    <section class="section section--compact">
-      <div class="wrap${about ? " about" : ""}">
-        ${about ? `<div><p class="label">About the hotel</p><div class="about__text">${about}</div></div>` : ""}
-        <div>
-          ${about ? `<p class="label">At a glance</p>` : `<div class="section__head"><p class="label">At a glance</p><h2>Good <em>to know</em></h2></div>`}
+    <section class="wrap mosaic mosaic--${Math.min(photos.length, MOSAIC)}">
+      ${photos.map((g, i) => `
+        <button type="button" class="gallery__item${i >= MOSAIC ? " is-more" : ""}" data-full="${esc(isResizable(g) ? sized(g, 2000) : asset(g))}" aria-label="Open photo ${i + 1} of ${photos.length}">
+          ${pic(g, `${h.name}, photo ${i + 1}`, i === 0
+            ? { sizes: "(max-width: 860px) 100vw, 700px", widths: [480, 960, 1440], eager: true }
+            : { sizes: "(max-width: 860px) 50vw, 300px", widths: [320, 480, 720], ar: "4:3" })}
+        </button>`).join("")}
+      ${photos.length > 1 ? `<button type="button" class="mosaic__all" data-open-gallery>${icon("photos")} Show all ${photos.length} photos</button>` : ""}
+    </section>
+
+    <div class="wrap hotel-layout">
+      <div class="hotel-main">
+        ${h.offer && on("offers") ? `<p class="offer">✦ ${esc(h.offer)}</p>` : ""}
+        ${h.description ? `<p class="lead">${esc(h.description)}</p>` : ""}
+
+        ${h.highlights?.length ? `
+        <div class="block">
+          <h2 class="h3">What this place offers</h2>
+          <ul class="amenities">${h.highlights.map(x => `<li>${icon("check")}${esc(x)}</li>`).join("")}</ul>
+        </div>` : ""}
+
+        ${about ? `<div class="block"><h2 class="h3">About the hotel</h2><div class="about__text">${about}</div></div>` : ""}
+
+        ${rooms.length ? `
+        <div class="block">
+          <h2 class="h3">Rooms &amp; suites</h2>
+          <div class="cards cards--rooms">
+            ${rooms.map(r => {
+              const price = r.price && on("prices") ? `from <strong>${inr(r.price)}</strong>` : "";
+              const reserve = on("bookingForm") ? `<a href="#" class="card__go card__go--text" data-scroll="reserve" data-room="${esc(r.name)}">Reserve</a>` : "";
+              return `
+              <article class="card card--static">
+                <div class="card__img">${pic(r.image || h.image, r.name, { sizes: "(max-width: 860px) 92vw, 360px", widths: [320, 480, 720], ar: "4:3" })}</div>
+                <div class="card__body">
+                  <h3>${esc(r.name)}</h3>
+                  ${r.specs ? `<p class="card__text card__text--full">${esc(r.specs)}</p>` : ""}
+                  ${price || reserve ? `<div class="card__foot"><span>${price}</span>${reserve}</div>` : ""}
+                </div>
+              </article>`;
+            }).join("")}
+          </div>
+        </div>` : ""}
+
+        ${on("hotelSections") && h.sections?.length ? `
+        <div class="block">
+          <h2 class="h3">Dine, celebrate &amp; unwind</h2>
+          <div class="features">
+            ${h.sections.map(s => `
+              <article class="feature">
+                ${s.image ? `<div class="feature__img">${pic(s.image, s.title, { sizes: "(max-width: 860px) 92vw, 340px", widths: [480, 720], ar: "3:2" })}</div>` : ""}
+                <div>
+                  <h3>${esc(s.title)}</h3>
+                  ${s.text ? `<p>${esc(s.text)}</p>` : ""}
+                </div>
+              </article>`).join("")}
+          </div>
+        </div>` : ""}
+      </div>
+
+      <aside class="hotel-side">
+        <div class="side-card">
+          ${price ? `<p class="side-card__price">from <strong>${inr(price)}</strong> <span>/ night</span></p>` : `<p class="side-card__title">Plan your stay</p>`}
+          ${rating ? `<p class="rating">★ ${rating} guest rating</p>` : ""}
+          ${live ? `<p class="side-card__live"><span id="localTime">--:--</span> local time<span id="weather"></span></p>` : ""}
+          ${enquire.replace('class="btn"', 'class="btn btn--block"')}
+          <a href="tel:${esc(phone.replace(/\s/g, ""))}" class="btn btn--ghost btn--block">${icon("phone")} Call ${esc(phone)}</a>
+          ${glanceList.length ? `
           <dl class="glance">
-            ${Object.entries(glance).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}
-          </dl>
-          ${h.address ? `<a class="link" href="https://maps.google.com/?q=${encodeURIComponent(h.name + ", " + h.address)}" target="_blank" rel="noopener">Get directions ↗</a>` : ""}
+            ${glanceList.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}
+          </dl>` : ""}
+          ${h.address ? `<a class="link" href="https://maps.google.com/?q=${encodeURIComponent(h.name + ", " + h.address)}" target="_blank" rel="noopener">${icon("map")} Get directions</a>` : ""}
         </div>
-      </div>
-    </section>` : ""}
-
-    ${rooms.length ? `
-    <section class="section section--tint section--compact">
-      <div class="wrap">
-        <div class="section__head"><p class="label">Rooms &amp; Suites</p><h2>Where <em>you'll sleep</em></h2></div>
-        <div class="cards">
-          ${rooms.map(r => {
-            const price = r.price && on("prices") ? `from <strong>${inr(r.price)}</strong>` : "";
-            const reserve = on("bookingForm") ? `<a href="#" class="card__go" data-scroll="reserve" data-room="${esc(r.name)}">Reserve →</a>` : "";
-            return `
-            <article class="card">
-              <div class="arch card__img">${pic(r.image || h.image, r.name, CARD_IMG)}</div>
-              <h3>${esc(r.name)}</h3>
-              ${r.specs ? `<p class="card__text">${esc(r.specs)}</p>` : ""}
-              ${price || reserve ? `<div class="card__foot"><span>${price}</span>${reserve}</div>` : ""}
-            </article>`;
-          }).join("")}
-        </div>
-      </div>
-    </section>` : ""}
-
-    ${on("hotelSections") && h.sections?.length ? `
-    <section class="section section--compact">
-      <div class="wrap">
-        <div class="section__head"><p class="label">At the hotel</p><h2>Dine, celebrate <em>&amp; unwind</em></h2></div>
-        <div class="features">
-          ${h.sections.map(s => `
-            <article class="feature">
-              ${s.image ? `<div class="feature__img">${pic(s.image, s.title, { sizes: "(max-width: 860px) 90vw, 560px", widths: [480, 720, 1080], ar: "3:2" })}</div>` : ""}
-              <div>
-                <h3>${esc(s.title)}</h3>
-                ${s.text ? `<p>${esc(s.text)}</p>` : ""}
-              </div>
-            </article>`).join("")}
-        </div>
-      </div>
-    </section>` : ""}
-
-    ${on("gallery") && h.gallery?.length > 1 ? `
-    <section class="section section--tint section--compact" id="gallery">
-      <div class="wrap">
-        <div class="section__row"><div><p class="label">Gallery</p><h2>A look <em>around</em></h2></div>
-          <span class="muted">${plural(h.gallery.length, "photo")}</span></div>
-        <div class="gallery">
-          ${h.gallery.map((g, i) => `
-            <button type="button" class="gallery__item" data-full="${esc(isResizable(g) ? sized(g, 2000) : asset(g))}" aria-label="Open photo ${i + 1} of ${h.gallery.length}">
-              ${pic(g, `${h.name}, photo ${i + 1}`, { sizes: "(max-width: 860px) 45vw, 280px", widths: [320, 480, 640], ar: "1:1" })}
-            </button>`).join("")}
-        </div>
-      </div>
-    </section>` : ""}
+      </aside>
+    </div>
 
     ${on("experiences") && h.experiences?.length ? `
     <section class="section section--dark section--compact">

@@ -54,10 +54,86 @@ function route() {
     $$("#reviewList [hidden]").forEach(el => (el.hidden = false));
     e.currentTarget.remove();
   });
+  document.body.classList.toggle("has-hero", r.page === "home");
+  initPage();
   if (!firstLoad) window.scrollTo({ top: 0, behavior: "instant" });
   firstLoad = false;
+  onScroll();
 }
 let firstLoad = true;
+
+// ==========================================================
+// 1b. Small interactive touches on each page
+// ==========================================================
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let slideTimer;
+
+function initPage() {
+  // Home: photo slideshow behind the heading
+  clearInterval(slideTimer);
+  const slides = $$(".hero__slide"), dots = $$(".hero__dots button");
+  if (slides.length > 1) {
+    let current = 0;
+    const show = i => {
+      current = (i + slides.length) % slides.length;
+      slides.forEach((s, j) => s.classList.toggle("is-active", j === current));
+      dots.forEach((d, j) => d.setAttribute("aria-current", j === current));
+    };
+    dots.forEach((d, j) => d.addEventListener("click", () => { show(j); restart(); }));
+    const restart = () => { clearInterval(slideTimer); if (!reduceMotion) slideTimer = setInterval(() => show(current + 1), 5500); };
+    restart();
+  }
+
+  // Home: filter the "Our stays" grid by type or state
+  const grid = $("#stayGrid");
+  if (grid) {
+    const chips = $$(".chips--filter .chip");
+    const showAll = $("#showAllStays");
+    // On phones the cards scroll sideways, so every hotel is in the row (no "Show all" needed)
+    const phone = matchMedia("(max-width: 860px)");
+    let expanded = false, filter = "";
+    const apply = () => {
+      const [kind, value] = filter.split(":");
+      const collapse = !filter && !expanded && !phone.matches;
+      $$(".card", grid).forEach(card => {
+        const match = !filter || card.dataset[kind] === value;
+        card.hidden = !match || (collapse && card.classList.contains("is-extra"));
+      });
+      chips.forEach(c => c.setAttribute("aria-pressed", c.dataset.filter === filter));
+      if (showAll) showAll.hidden = !collapse;
+      grid.scrollTo({ left: 0 });
+    };
+    phone.addEventListener("change", apply);
+    chips.forEach(c => c.addEventListener("click", () => { filter = c.dataset.filter; apply(); }));
+    showAll?.addEventListener("click", () => { expanded = true; apply(); });
+    apply();
+  }
+
+  // Gently fade cards in as they scroll into view
+  if (!reduceMotion && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+    }), { rootMargin: "0px 0px -40px 0px" });
+    $$("#app .card, #app .pcard, #app .type, #app .feature, #app .block").filter(el => !el.closest(".cards--row")).forEach(el => {
+      if (el.getBoundingClientRect().top > innerHeight) { el.classList.add("reveal"); io.observe(el); }
+    });
+  }
+}
+
+// Header turns solid once you scroll past the top of the page
+function onScroll() { document.body.classList.toggle("is-scrolled", scrollY > 30); }
+addEventListener("scroll", onScroll, { passive: true });
+
+document.addEventListener("click", e => {
+  // ‹ › buttons beside a row of cards
+  const rowBtn = e.target.closest("[data-scroll-row]");
+  if (rowBtn) {
+    const row = rowBtn.closest("section").querySelector(".cards--row");
+    row?.scrollBy({ left: +rowBtn.dataset.scrollRow * row.clientWidth * .8, behavior: "smooth" });
+  }
+  // "Show all photos" opens the photo viewer at the first photo
+  if (e.target.closest("[data-open-gallery]")) $(".gallery__item")?.click();
+});
 
 document.addEventListener("click", e => {
   // Links that scroll within the page, e.g. "Check availability"

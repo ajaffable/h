@@ -36,6 +36,7 @@ if (/example\.com/.test(site.SITE.url)) {
 const template = fs.readFileSync("index.html", "utf8");
 const fill = (meta, content, urlPath = "") => template
   .replace(/<!--META-->[\s\S]*?<!--\/META-->/, site.headTags(meta))
+  .replace("<body>", urlPath === "/" ? '<body class="has-hero">' : "<body>")
   .replace("<!--LOGO-->", site.esc(site.SITE.name))
   .replace("<!--NAV-->", site.navHTML())
   .replace('<main id="app">', urlPath ? `<main id="app" data-prebuilt="${urlPath}">` : '<main id="app">')

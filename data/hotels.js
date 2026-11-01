@@ -75,6 +75,7 @@ const FEATURES = {
   popularCities: true,       // city buttons under the search box
   stats: true,               // trust numbers: hotels, destinations, states, SITE.stats
   homeDestinations: true,    // "Where to next?" destination cards
+  homeStays: true,           // "Find your perfect stay": all hotels with filter buttons
   recentlyViewed: true,      // "Recently viewed" row for returning visitors
   popularHotels: true,       // "Popular hotels" row (hotels with popular: true)
   browseByType: true,        // the category cards

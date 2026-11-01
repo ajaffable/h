@@ -78,6 +78,7 @@ const FEATURES = {
 | `destinations` | "Destinations" page, plus a page per city listing all its hotels whatever their type (e.g. `/destinations/rishikesh/`) |
 | `offersPage` | "Offers" page with every hotel that has an `offer` (shown only when at least one hotel has one) |
 | `homeDestinations` | "Where to next?" destination cards on the home page |
+| `homeStays` | "Find your perfect stay": all hotels on the home page with filter buttons (type and state) |
 | `aboutText` | The longer "About the hotel" text (`about`) |
 | `hotelSections` | Dining, events and spa sections (`sections`) |
 | `gallery` | Photo gallery with a full-screen viewer (`gallery`) |
