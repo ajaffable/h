@@ -38,18 +38,18 @@
 
 const SITE = {
   // ▼ PLACEHOLDERS: replace everything marked ← with your real brand details
-  url: "https://www.example.com",      // ← your domain, used for Google (no slash at the end)
-  name: "Your Brand",                  // ← shown as the logo
-  brand: "Your Brand Hotels & Resorts",// ← full name used in Google titles
+  url: "https://www.hotelswale.com",      // ← your domain, used for Google (no slash at the end)
+  name: "Hotels Wale",                  // ← shown as the logo
+  brand: "Hotels Wale Hotels & Resorts",// ← full name used in Google titles
   tagline: "Hotels & Resorts",
   headline: "Stays across the Himalayas,",
   headlineEm: "made for every journey.",
   intro: "Hotels and resorts across Uttarakhand, Himachal Pradesh, Punjab and Haryana, where the beauty of the Himalayas greets you at every turn.",
   heroImage: "images/site/hero.webp",
-  address: "Your office address",      // ← shown in the footer (delete the line to hide it)
-  phone: "+91 98765 43210",            // ← main phone, used for every hotel
-  whatsapp: "919876543210",            // ← WhatsApp number: digits only, with country code
-  email: "stay@example.com",           // ← main email
+  address: "Radha Bhawan Estate, Mussoorie, Uttarakhand - 248179",      // ← shown in the footer (delete the line to hide it)
+  phone: "+91 9910078107",            // ← main phone, used for every hotel
+  whatsapp: "919910078107",            // ← WhatsApp number: digits only, with country code
+  email: "sales@hotelswale.com",           // ← main email
   instagram: "#",                      // ← your Instagram page link
   facebook: "#",                       // ← your Facebook page link
 
