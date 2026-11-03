@@ -56,7 +56,9 @@ function pic(url, alt, { sizes = "100vw", widths = [320, 480, 720], ar = "", eag
   const srcset = widths.map(w => `${sized(url, w, ar)} ${w}w`).join(", ");
   return `<img src="${sized(url, widths[1], ar)}" srcset="${srcset}" sizes="${sizes}" alt="${esc(alt)}" ${load} decoding="async">`;
 }
-const CARD_IMG = { sizes: "(max-width: 860px) 45vw, 270px", ar: "4:5" };
+// Full-width photos: on phones a 960 px photo is already sharp, so pick that instead of 1440 px
+const FULL = "(max-width: 600px) 320px, 100vw";
+const CARD_IMG = { sizes: "(max-width: 600px) 160px, (max-width: 860px) 45vw, 270px", ar: "4:5" };
 
 // ==========================================================
 // 1. Build the tree: root → category → state → city → hotel
@@ -240,7 +242,7 @@ function hotelCard(node) {
 function photoCard(link, image, title, sub, extra = "") {
   return `
     <a class="pcard" href="${link}">
-      ${pic(image, title, { sizes: "(max-width: 860px) 70vw, 300px", widths: [320, 480, 720], ar: "4:5" })}
+      ${pic(image, title, { sizes: "(max-width: 600px) 160px, (max-width: 860px) 70vw, 300px", widths: [320, 480, 720], ar: "4:5" })}
       <div class="pcard__body">
         <h3>${esc(title)}</h3>
         <p>${sub}</p>
@@ -323,7 +325,7 @@ function footerHTML() {
   const social = [["instagram", SITE.instagram], ["facebook", SITE.facebook]].filter(([, url]) => url && url !== "#");
   return `
   <div class="cta-band">
-    ${pic(SITE.ctaImage || SITE.heroImage, "", { sizes: "100vw", widths: [960, 1440] })}
+    ${pic(SITE.ctaImage || SITE.heroImage, "", { sizes: FULL, widths: [960, 1440] })}
     <div class="wrap cta">
       <p class="label label--light">Plan your trip</p>
       <h2>Need help choosing <em>a stay?</em></h2>
@@ -386,7 +388,7 @@ function homePage() {
   return `
     <section class="hero hero--home">
       <div class="hero__slides" aria-hidden="true">
-        ${slides.map((img, i) => `<div class="hero__slide${i ? "" : " is-active"}">${pic(img, "", { sizes: "100vw", widths: [960, 1440], eager: !i })}</div>`).join("")}
+        ${slides.map((img, i) => `<div class="hero__slide${i ? "" : " is-active"}">${i ? pic(img, "", { sizes: FULL, widths: [960, 1440] }).replace(/ (src|srcset)=/g, " data-$1=") : pic(img, "", { sizes: FULL, widths: [960, 1440], eager: true })}</div>`).join("")}
       </div>
       <div class="wrap hero__content">
         <p class="label label--light">${esc(SITE.tagline)}</p>
@@ -437,7 +439,7 @@ function homePage() {
 
     ${on("whyBookWithUs") && SITE.perks?.length ? `
     <section class="section perks-band">
-      ${pic(SITE.perksImage || slides[1] || SITE.heroImage, "", { sizes: "100vw", widths: [960, 1440] })}
+      ${pic(SITE.perksImage || slides[1] || SITE.heroImage, "", { sizes: FULL, widths: [960, 1440] })}
       <div class="wrap">
         <div class="section__row"><div><p class="label label--light">Why stay with us</p><h2>Comfort, views <em>&amp; real hospitality</em></h2></div></div>
         <ul class="perks-grid">
@@ -459,7 +461,7 @@ function homePage() {
             const cities = new Set(hotels.map(n => n.data.city)).size;
             return `
               <a class="type" href="${href(c)}">
-                ${pic(c.data.image, c.name, { sizes: "(max-width: 860px) 92vw, 580px", widths: [480, 960], ar: "16:10" })}
+                ${pic(c.data.image, c.name, { sizes: "(max-width: 600px) 320px, (max-width: 860px) 92vw, 580px", widths: [480, 960], ar: "16:10" })}
                 <div class="type__body">
                   <h3>${esc(c.name)}</h3>
                   <p>${esc(c.data.tagline || "")}</p>
@@ -521,7 +523,7 @@ function destinationCard(d) {
 function pageBanner({ image, crumbsHTML = "", label = "", title, sub = "", stats = [], extra = "" }) {
   return `
     <section class="page-banner">
-      ${image ? pic(image, "", { sizes: "100vw", widths: [960, 1440], eager: true }) : ""}
+      ${image ? pic(image, "", { sizes: FULL, widths: [960, 1440], eager: true }) : ""}
       <div class="wrap page-banner__inner">
         ${crumbsHTML.replace('class="crumbs wrap"', 'class="crumbs"')}
         ${label ? `<p class="label label--light">${label}</p>` : ""}
@@ -746,7 +748,7 @@ function hotelPage(node) {
       ${photos.map((g, i) => `
         <button type="button" class="gallery__item${i >= MOSAIC ? " is-more" : ""}" data-full="${esc(isResizable(g) ? sized(g, 2000) : asset(g))}" aria-label="Open photo ${i + 1} of ${photos.length}">
           ${pic(g, `${h.name}, photo ${i + 1}`, i === 0
-            ? { sizes: "(max-width: 860px) 100vw, 700px", widths: [480, 960, 1440], eager: true }
+            ? { sizes: "(max-width: 600px) 320px, (max-width: 860px) 100vw, 700px", widths: [480, 960, 1440], eager: true }
             : { sizes: "(max-width: 860px) 50vw, 300px", widths: [320, 480, 720], ar: "4:3" })}
         </button>`).join("")}
       ${photos.length > 1 ? `<button type="button" class="mosaic__all" data-open-gallery>${icon("photos")} Show all ${photos.length} photos</button>` : ""}

@@ -74,14 +74,27 @@ function initPage() {
   const slides = $$(".hero__slide"), dots = $$(".hero__dots button");
   if (slides.length > 1) {
     let current = 0;
+    // photos after the first one are loaded only when they're about to be shown
+    const load = slide => {
+      const img = slide && $("img[data-src]", slide);
+      if (!img) return;
+      if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+      img.src = img.dataset.src;
+      img.removeAttribute("data-src"); img.removeAttribute("data-srcset");
+    };
     const show = i => {
       current = (i + slides.length) % slides.length;
+      load(slides[current]);
+      load(slides[(current + 1) % slides.length]);
       slides.forEach((s, j) => s.classList.toggle("is-active", j === current));
       dots.forEach((d, j) => d.setAttribute("aria-current", j === current));
     };
     dots.forEach((d, j) => d.addEventListener("click", () => { show(j); restart(); }));
     const restart = () => { clearInterval(slideTimer); if (!reduceMotion) slideTimer = setInterval(() => show(current + 1), 5500); };
     restart();
+    // fetch the second photo once the page has finished loading, ready for the first change
+    if (document.readyState === "complete") setTimeout(() => load(slides[1]), 1500);
+    else addEventListener("load", () => setTimeout(() => load(slides[1]), 1500), { once: true });
   }
 
   // Home: filter the "Our stays" grid by type or state
